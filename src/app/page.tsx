@@ -1,0 +1,3 @@
+export default function Home() {
+  return <main className="preview"><div className="brand">✚ <span>MedSentinel<span className="muted"> AI</span></span></div><div className="preview-body"><span className="eyebrow">CLINICAL INTEGRITY WORKSPACE</span><h1>A clearer view of<br/>safer care.</h1><p>Connect the evidence. Understand the risk.<br/>Keep every decision in human hands.</p><div className="preview-card"><span className="live-dot"/> Hospital overview <span className="badge">Research prototype</span><h2>Care integrity, in context.</h2><p>Patient observations, connected devices, and security events—one evidence-led workspace.</p></div></div></main>;
+}
