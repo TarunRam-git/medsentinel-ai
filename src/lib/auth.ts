@@ -18,7 +18,8 @@ export async function currentUser(): Promise<User | null> {
       "SELECT u.id,u.email,u.name,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=? AND s.expires_at>?",
     )
     .get(digest(token), Date.now()) as User | undefined;
-  if (row?.id.startsWith("demo-") && process.env.ENABLE_DEMO !== "true") return null;
+  if (row?.id.startsWith("demo-") && process.env.ENABLE_DEMO !== "true")
+    return null;
   return row ?? null;
 }
 export async function requireUser(allowed?: Role[]) {

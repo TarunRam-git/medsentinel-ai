@@ -1,6 +1,14 @@
 .table-scroll {
   position: relative;
 }
+.heading-actions {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.pill.no_alerts {
+  background: #edf7f1;
+  color: #3b7155;
+}
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -106,6 +114,12 @@ th,
   color: #856a39;
 }
 @media (max-width: 700px) {
+  .sidebar {
+    visibility: hidden;
+  }
+  .sidebar.is-open {
+    visibility: visible;
+  }
   .table-scroll.alert-desktop {
     display: none;
   }

@@ -19,6 +19,9 @@ export type Patient = {
   vulnerability: number;
   context: string;
   vitals: { hr: number; spo2: number; systolic: number; temperature: number };
+  vitalTimestamps?: Partial<
+    Record<"hr" | "spo2" | "systolic" | "temperature", string>
+  >;
 };
 export type Device = {
   id: string;
@@ -104,6 +107,7 @@ export type Snapshot = {
   demo: boolean;
   modelHealth: {
     available: boolean;
+    synthetic?: boolean;
     version?: string;
     metrics?: Record<string, Record<string, number>>;
     dataset?: string;

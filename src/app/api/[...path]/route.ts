@@ -98,25 +98,31 @@ export async function GET(request: Request, context: Context) {
     if (path === "snapshot") {
       const health = await modelHealth();
       // Real-data research access is model-only until governed de-identification is configured.
-      const restrictedResearch = user.role === "researcher" && process.env.ENABLE_DEMO !== "true";
+      const restrictedResearch =
+        user.role === "researcher" && process.env.ENABLE_DEMO !== "true";
       return Response.json(
         {
           user,
           patients:
-            !restrictedResearch && (clinical(user.role) || user.role === "researcher")
+            !restrictedResearch &&
+            (clinical(user.role) || user.role === "researcher")
               ? all<Patient>("patients")
               : [],
           devices: restrictedResearch ? [] : all<Device>("devices"),
-          alerts: restrictedResearch ? [] : all<Alert>("alerts").map((a) => visibleAlert(a, user.role)),
-          events: restrictedResearch ? [] : all<Event>("events")
-            .filter(
-              (e) =>
-                clinical(user.role) ||
-                user.role === "researcher" ||
-                (user.role === "security" && e.source === "security") ||
-                e.source === "device",
-            )
-            .slice(0, 150),
+          alerts: restrictedResearch
+            ? []
+            : all<Alert>("alerts").map((a) => visibleAlert(a, user.role)),
+          events: restrictedResearch
+            ? []
+            : all<Event>("events")
+                .filter(
+                  (e) =>
+                    clinical(user.role) ||
+                    user.role === "researcher" ||
+                    (user.role === "security" && e.source === "security") ||
+                    e.source === "device",
+                )
+                .slice(0, 150),
           audit: ["admin", "security"].includes(user.role) ? auditLog() : [],
           auditValid: verifyAudit(),
           demo: process.env.ENABLE_DEMO === "true",
@@ -128,7 +134,11 @@ export async function GET(request: Request, context: Context) {
     }
     if (path === "export") {
       await requireUser(["admin", "security", "researcher"]);
-      if (user.role === "researcher" && process.env.ENABLE_DEMO !== "true") throw new HttpError(403,"Research exports require a governed de-identified dataset.");
+      if (user.role === "researcher" && process.env.ENABLE_DEMO !== "true")
+        throw new HttpError(
+          403,
+          "Research exports require a governed de-identified dataset.",
+        );
       const alerts = all<Alert>("alerts").map((a) => ({
         id: a.id,
         severity: a.tier,

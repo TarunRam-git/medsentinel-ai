@@ -8,4 +8,8 @@ CREATE TABLE IF NOT EXISTS audit (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT 
 CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit BEGIN SELECT RAISE(ABORT, 'Audit rows are append-only'); END;
 CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit BEGIN SELECT RAISE(ABORT, 'Audit rows are append-only'); END;
 CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL, resets_at INTEGER NOT NULL);
-PRAGMA user_version = 1;
+CREATE TABLE IF NOT EXISTS alert_versions (id TEXT PRIMARY KEY, alert_id TEXT NOT NULL, at TEXT NOT NULL, body TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_alert_versions_alert_id ON alert_versions(alert_id, at);
+CREATE TRIGGER IF NOT EXISTS alert_versions_no_update BEFORE UPDATE ON alert_versions BEGIN SELECT RAISE(ABORT, 'Evidence versions are append-only'); END;
+CREATE TRIGGER IF NOT EXISTS alert_versions_no_delete BEFORE DELETE ON alert_versions BEGIN SELECT RAISE(ABORT, 'Evidence versions are append-only'); END;
+PRAGMA user_version = 2;

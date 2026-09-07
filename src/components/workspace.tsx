@@ -53,6 +53,7 @@ const nav = [
   { id: "audit", label: "Audit trail", icon: BookOpen },
 ] as const;
 const names: Record<string, string> = {
+  no_alerts: "No alerts",
   open: "Open",
   acknowledged: "Acknowledged",
   investigating: "Investigating",
@@ -240,13 +241,16 @@ export default function Workspace({ section }: { section: Section }) {
   );
   const canSimulate =
     data.demo && ["admin", "researcher"].includes(data.user.role);
-  const canExport = ["admin", "security", "researcher"].includes(
-    data.user.role,
-  );
+  const canExport =
+    ["admin", "security"].includes(data.user.role) ||
+    (data.demo && data.user.role === "researcher");
   const navItems = nav.filter(
     (n) =>
       (n.id !== "patients" ||
-        ["admin", "clinician", "researcher"].includes(data.user.role)) &&
+        ["admin", "clinician"].includes(data.user.role) ||
+        (n.id === "patients" &&
+          data.demo &&
+          data.user.role === "researcher")) &&
       (n.id !== "audit" || ["admin", "security"].includes(data.user.role)),
   );
   const alertSelected = selected && "hypotheses" in selected ? selected : null;
@@ -273,8 +277,9 @@ export default function Workspace({ section }: { section: Section }) {
     overview: "A shared view of patient safety, device health, and security.",
     alerts:
       "Prioritize, investigate, and document with evidence at every step.",
-    patients:
-      "Synthetic patient context and the devices supporting their care.",
+    patients: data.demo
+      ? "Synthetic patient context and the devices supporting their care."
+      : "Registered patient context and the devices supporting their care.",
     devices: "Track equipment, patient associations, and telemetry continuity.",
     insights:
       "Transparent model provenance, evaluation, and practical limitations.",
@@ -899,7 +904,7 @@ export default function Workspace({ section }: { section: Section }) {
                       {risk ? (
                         <Pill value={risk.tier} />
                       ) : (
-                        <Pill value="stable" />
+                        <Pill value="no_alerts" />
                       )}
                     </div>
                     <h2>{p.id}</h2>
@@ -1051,7 +1056,10 @@ export default function Workspace({ section }: { section: Section }) {
                   <div>
                     <h2>Evaluation results</h2>
                     <p>
-                      Grouped holdout · reproducible seed · synthetic data only
+                      Grouped holdout ·{" "}
+                      {data.modelHealth.synthetic === false
+                        ? "Operator-provided dataset"
+                        : "Synthetic data only"}
                     </p>
                   </div>
                   <span className="badge">Research benchmark</span>
@@ -1100,8 +1108,8 @@ export default function Workspace({ section }: { section: Section }) {
                   />
                 )}
                 <div className="panel-foot">
-                  Synthetic benchmarks verify the pipeline. They do not
-                  establish real-world clinical performance.
+                  These retrospective benchmarks do not establish prospective
+                  clinical performance.
                 </div>
               </section>
               <section className="panel prose-panel">
@@ -1653,7 +1661,9 @@ export default function Workspace({ section }: { section: Section }) {
         )}
         {selected && "vitals" in selected && (
           <>
-            <span className="eyebrow">PATIENT CONTEXT · SYNTHETIC RECORD</span>
+            <span className="eyebrow">
+              PATIENT CONTEXT{data.demo ? " · SYNTHETIC RECORD" : ""}
+            </span>
             <h2>
               {selected.id} · {selected.name}
             </h2>
@@ -1664,7 +1674,11 @@ export default function Workspace({ section }: { section: Section }) {
               <HeartPulse size={22} />
               <p>{selected.context}</p>
             </div>
-            <h3>Latest baseline observations</h3>
+            <h3>Latest reported observations</h3>
+            <p className="small-note">
+              Reported signals may be unverified. Review conflicting evidence
+              before interpreting them.
+            </p>
             <div className="detail-stats">
               <div>
                 <small>Heart rate</small>

@@ -30,9 +30,8 @@ services:
     build:
       context: .
       dockerfile: ml/Dockerfile
-    env_file: .env.local
     environment:
-      ML_SERVICE_URL: ""
+      ML_SERVICE_TOKEN: ${ML_SERVICE_TOKEN:?Pass --env-file .env.local}
     restart: unless-stopped
 volumes:
   medsentinel-data:

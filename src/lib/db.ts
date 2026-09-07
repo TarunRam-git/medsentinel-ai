@@ -49,7 +49,7 @@ export function db(): DatabaseSync {
         "system",
         "system.initialized",
         "workspace",
-        "Database schema version 1",
+        "Database schema version 2",
       );
     });
   }
@@ -90,6 +90,15 @@ export function get<T>(collection: string, id: string): T | undefined {
   return row ? decrypt<T>(row.body) : undefined;
 }
 export function put<T extends { id: string }>(collection: string, value: T) {
+  if (collection === "alerts")
+    db()
+      .prepare("INSERT INTO alert_versions VALUES (?,?,?,?)")
+      .run(
+        crypto.randomUUID(),
+        value.id,
+        new Date().toISOString(),
+        encrypt(value),
+      );
   db()
     .prepare(
       "INSERT INTO records VALUES (?,?,?,?) ON CONFLICT(collection,id) DO UPDATE SET body=excluded.body,updated_at=excluded.updated_at",

@@ -25,8 +25,10 @@ export const eventSchema = z
   .superRefine((e, ctx) => {
     for (const [key, value] of Object.entries(e.values)) {
       const range: Record<string, [number, number]> = {
-      hr: [0, 300],
-      spo2: [0, 100],
+        hr: [0, 300],
+        systolic: [0, 300],
+        temperature: [20, 45],
+        spo2: [0, 100],
         independentSpo2: [0, 100],
         signalQuality: [0, 1],
         deviceError: [0, 1],
@@ -90,6 +92,25 @@ export async function ingest(input: unknown, actor: string) {
       currentEvents.length === events.length ? model : undefined,
     );
     put("events", event);
+    if (event.source === "vitals") {
+      const currentPatient = get<Patient>("patients", patient.id)!;
+      const updated = {
+        ...currentPatient,
+        vitals: { ...currentPatient.vitals },
+        vitalTimestamps: { ...currentPatient.vitalTimestamps },
+      };
+      for (const key of ["hr", "spo2", "systolic", "temperature"] as const) {
+        const value = event.values[key];
+        if (
+          typeof value === "number" &&
+          event.timestamp >= (updated.vitalTimestamps[key] ?? "")
+        ) {
+          updated.vitals[key] = value;
+          updated.vitalTimestamps[key] = event.timestamp;
+        }
+      }
+      put("patients", updated);
+    }
     const currentDevice = get<Device>("devices", device.id)!;
     if (event.source === "device" && event.timestamp >= currentDevice.lastSeen)
       put("devices", {

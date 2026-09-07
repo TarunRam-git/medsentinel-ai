@@ -134,6 +134,83 @@ try {
   assert.equal(snapshot.auditValid, true);
   checks++;
   console.log("PASS durable synthetic workspace and audit chain");
+  const registeredPatient = {
+    id: "PT-TEST",
+    name: "Synthetic registry patient",
+    age: 50,
+    ward: "Test ward",
+    bed: "TEST-01",
+    vulnerability: 0.5,
+    context: "API test only",
+    vitals: { hr: 75, spo2: 98, systolic: 120, temperature: 37 },
+  };
+  await expectStatus(
+    "clinician cannot register identities",
+    await req("/api/registry", {
+      method: "POST",
+      cookie: clinician,
+      body: { type: "patient", record: registeredPatient },
+    }),
+    403,
+  );
+  await expectStatus(
+    "administrator can register a patient",
+    await req("/api/registry", {
+      method: "POST",
+      cookie: admin,
+      body: { type: "patient", record: registeredPatient },
+    }),
+    201,
+  );
+  await expectStatus(
+    "existing registry IDs cannot be overwritten",
+    await req("/api/registry", {
+      method: "POST",
+      cookie: admin,
+      body: { type: "patient", record: registeredPatient },
+    }),
+    409,
+  );
+  const registeredDevice = {
+    id: "MON-TEST",
+    name: "Synthetic test monitor",
+    type: "Patient monitor",
+    patientId: "PT-TEST",
+    ward: "Test ward",
+    status: "offline",
+    firmware: "test-v1",
+    lastSeen: new Date().toISOString(),
+  };
+  await expectStatus(
+    "administrator can associate a device",
+    await req("/api/registry", {
+      method: "POST",
+      cookie: admin,
+      body: { type: "device", record: registeredDevice },
+    }),
+    201,
+  );
+  await expectStatus(
+    "registry rejects mismatched departments",
+    await req("/api/registry", {
+      method: "POST",
+      cookie: admin,
+      body: {
+        type: "device",
+        record: { ...registeredDevice, id: "MON-BAD", ward: "Wrong" },
+      },
+    }),
+    422,
+  );
+  await expectStatus(
+    "oversized payloads are rejected",
+    await req("/api/ingest", {
+      method: "POST",
+      key: env.INGEST_API_KEY,
+      body: { oversized: "x".repeat(70000) },
+    }),
+    413,
+  );
   const sec = await (await req("/api/snapshot", { cookie: security })).json();
   assert.equal(sec.patients.length, 0);
   assert.ok(sec.events.every((e) => ["security", "device"].includes(e.source)));
@@ -265,6 +342,32 @@ try {
     202,
   );
   const exported = await req("/api/export", { cookie: security });
+  const afterVital = await (
+    await req("/api/snapshot", { cookie: admin })
+  ).json();
+  assert.equal(
+    afterVital.patients.find((p) => p.id === "PT-1024").vitals.spo2,
+    98,
+  );
+  await req("/api/fhir", {
+    method: "POST",
+    key: env.INGEST_API_KEY,
+    body: {
+      ...fhir,
+      id: "old-vital",
+      effectiveDateTime: new Date(Date.now() - 60000).toISOString(),
+      valueQuantity: { ...fhir.valueQuantity, value: 80 },
+    },
+  });
+  const afterLateVital = await (
+    await req("/api/snapshot", { cookie: admin })
+  ).json();
+  assert.equal(
+    afterLateVital.patients.find((p) => p.id === "PT-1024").vitals.spo2,
+    98,
+  );
+  checks++;
+  console.log("PASS late observations cannot overwrite newer patient vitals");
   await expectStatus(
     "SIEM export is downloadable and minimized",
     exported,
@@ -296,6 +399,19 @@ try {
     /append-only/,
   );
   db.close();
+  const versions = new DatabaseSync(env.DATABASE_PATH);
+  assert.ok(
+    versions
+      .prepare("SELECT count(*) AS n FROM alert_versions WHERE alert_id=?")
+      .get(alert.id).n >= 2,
+  );
+  assert.throws(
+    () => versions.prepare("DELETE FROM alert_versions").run(),
+    /append-only/,
+  );
+  versions.close();
+  checks++;
+  console.log("PASS immutable evidence and model versions are retained");
   checks++;
   console.log(
     "PASS encrypted payload storage and append-only audit enforcement",
@@ -322,6 +438,74 @@ try {
       body: { email: "rate@test.local", password: "incorrect" },
     }),
     429,
+  );
+  await new Promise((resolve, reject) => {
+    let output = "";
+    const provision = spawn(
+      process.execPath,
+      [
+        "node_modules/tsx/dist/cli.mjs",
+        "scripts/create-user.ts",
+        "research@test.local",
+        "Research operator",
+        "researcher",
+      ],
+      { env, stdio: ["ignore", "pipe", "pipe"] },
+    );
+    provision.stdout.on("data", (b) => (output += b));
+    provision.stderr.on("data", (b) => (output += b));
+    provision.on("exit", (code) =>
+      code === 0
+        ? resolve()
+        : reject(new Error(`Provisioning failed: ${output}`)),
+    );
+  });
+  const provisionDb = new DatabaseSync(env.DATABASE_PATH);
+  const researcherId = provisionDb
+    .prepare("SELECT id FROM users WHERE email='research@test.local'")
+    .get().id;
+  provisionDb.close();
+  const generated = readFileSync(
+    join(temp, `${researcherId}-credentials.txt`),
+    "utf8",
+  ).match(/Password: (.+)/)[1];
+  const actualResearchLogin = await req("/api/auth/login", {
+    method: "POST",
+    body: { email: "research@test.local", password: generated },
+  });
+  await expectStatus(
+    "operator can provision a real role account",
+    actualResearchLogin,
+    200,
+  );
+  const realResearch = actualResearchLogin.headers
+    .get("set-cookie")
+    .split(";")[0];
+  await stop();
+  env.ENABLE_DEMO = "false";
+  await start();
+  await expectStatus(
+    "production disables demo sign-in",
+    await req("/api/auth/demo", { method: "POST", body: { role: "admin" } }),
+    404,
+  );
+  await expectStatus(
+    "disabling demo invalidates existing demo sessions",
+    await req("/api/snapshot", { cookie: security }),
+    401,
+  );
+  const limitedResearch = await (
+    await req("/api/snapshot", { cookie: realResearch })
+  ).json();
+  assert.equal(limitedResearch.patients.length, 0);
+  assert.equal(limitedResearch.events.length, 0);
+  assert.equal(limitedResearch.alerts.length, 0);
+  checks++;
+  console.log("PASS production research account cannot read clinical records");
+  await expectStatus(
+    "production research export requires governed data",
+    await req("/api/export", { cookie: realResearch }),
+    403,
   );
   console.log(
     `\n${checks} API/security checks passed. Isolated test data: ${temp}`,
