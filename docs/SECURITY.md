@@ -12,8 +12,11 @@ This is a research implementation. It is not certified, clinically validated, or
 - Audit rows have keyed chained hashes; SQLite triggers reject UPDATE/DELETE. This detects record modification and internal deletion during verification. It does not establish an independently trusted head, detect removal of a valid tail by an attacker with file access, or resist an attacker holding both the database and encryption key. Use externally anchored, immutable audit retention for production.
 - Patient/device association validation, UTC normalization, ingestion deduplication, a five-minute evidence window, evidence IDs, provenance, model version capture, and optimistic concurrency checks preserve traceability.
 - The app never issues a treatment, device-setting, or network-containment command.
+- Every alert write also appends an encrypted evidence/model snapshot to `alert_versions`, whose triggers reject updates and deletes. Human review preserves the inspected version and does not erase previous explanations. Received vital observations update the patient view only when newer than the stored timestamp for that measurement.
 
 ## Deployment requirements
+
+When demo mode is disabled, existing demo sessions are rejected and researcher accounts receive no clinical record arrays or SIEM export. They retain model-insight access. Institution-approved de-identification must be implemented before widening research access to real records.
 
 1. Set ENABLE_DEMO=false. Demo access deliberately permits any local visitor to assume a synthetic role and must never coexist with real patient data.
 2. Set a canonical HTTPS APP_ORIGIN; terminate TLS using a trusted reverse proxy. HTTP loopback is supported for local testing only.
