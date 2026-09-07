@@ -1,0 +1,7 @@
+.next
+.venv
+node_modules
+data
+ml/artifacts
+package-lock.json
+db/*.sql

@@ -1,0 +1,38 @@
+services:
+  web:
+    build: .
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file: .env.local
+    environment:
+      NODE_ENV: production
+      ENABLE_DEMO: "false"
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
+      DATABASE_PATH: /app/data/medsentinel.db
+      ML_SERVICE_URL: http://model:8001
+    volumes:
+      - medsentinel-data:/app/data
+    depends_on:
+      - model
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  model:
+    build:
+      context: .
+      dockerfile: ml/Dockerfile
+    env_file: .env.local
+    environment:
+      ML_SERVICE_URL: ""
+    restart: unless-stopped
+volumes:
+  medsentinel-data:

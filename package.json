@@ -1,12 +1,24 @@
 {
-  "name": "is",
-  "version": "0.1.0",
+  "name": "medsentinel-ai",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "test:api": "node scripts/test-api.mjs",
+    "setup": "node scripts/setup.mjs",
+    "ml:train": ".venv/bin/python -m ml.train",
+    "ml:serve": "node scripts/start-ml.mjs",
+    "user:create": "tsx scripts/create-user.ts",
+    "format": "prettier --write src db docs scripts tests *.json *.ts *.mjs *.md .github/workflows/*.yml",
+    "format:check": "prettier --check src db docs scripts tests *.json *.ts *.mjs *.md .github/workflows/*.yml"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   },
   "dependencies": {
     "lucide-react": "^1.41.0",
@@ -21,6 +33,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
+    "prettier": "^3.9.6",
     "tsx": "^4.23.13",
     "typescript": "^5"
   }

@@ -1,0 +1,13 @@
+# Deleted-folder storage inspection
+
+Inspected on 7 September 2026, before application development.
+
+- `/home/tarun/VIT/code2create` and `/home/tarun/VIT/c2c` were absent.
+- `/home/tarun/.local/share/Trash` occupied zero bytes; no matching trash entries were found.
+- Readable `/proc/*/fd` descriptors had no deleted targets associated with either folder. `lsof` was unavailable, so the accessible process descriptors were checked directly. Root-owned process visibility is limited.
+- `/home` is a separate Btrfs `@home` subvolume. The configured Snapper policy covers root only, so those configured root snapshots do not preserve files in the home subvolume.
+- Docker container labels tied all existing containers to Sunny.ai-Tarun or Prism/Data-Excellence-Agent, not either deleted project. No project-attributable Docker deletion was justified.
+- `btrfs filesystem sync /home` succeeded. This requests a filesystem commit; it does not delete other files.
+- Initial free space was approximately 3.45 GiB. Observations changed while installs and existing services were active, so no exact recovered amount can be attributed to this task.
+
+No additional material files or Docker resources were deleted. Administrative inspection of all Btrfs subvolumes and root-owned open files was unavailable: `sudo -n` required a password. There is no verified remaining target belonging to the two deleted folders, and no basis for claiming that additional space was reclaimed.

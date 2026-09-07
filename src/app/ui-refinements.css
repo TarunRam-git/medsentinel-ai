@@ -1,0 +1,161 @@
+.table-scroll {
+  position: relative;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+}
+.mobile-alerts {
+  display: none;
+}
+.sidebar nav a,
+.btn,
+.text-link,
+.alert-title {
+  min-height: 36px;
+}
+.alert-title {
+  display: inline-flex;
+  align-items: center;
+}
+.panel-foot,
+.page-footer,
+.small-note,
+.model-note,
+.timeline small,
+td small,
+th,
+.stat-card > p,
+.heading-row p,
+.panel-heading p,
+.search-box input::placeholder,
+.date-label,
+.risk-legend button,
+.risk-ring span,
+.subtle-tag,
+.chart-column small,
+.ward-card > small,
+.activity-list small,
+.activity-list time,
+.status-text,
+.demo-ribbon,
+.patient-card > p,
+.vital-row small,
+.vital-row em,
+.patient-card-foot,
+.info-banner p,
+.model-card p,
+.prose-panel p,
+.audit-detail,
+.detail-dialog > p,
+.detail-stats small,
+.detail-stats em,
+.factor-grid > div,
+.hypotheses > div,
+.timeline p,
+.timeline time,
+.recommendation p,
+.review-note p,
+.review-note small,
+.device-facts span,
+.login-story-content > p,
+.login-promises,
+.login-foot,
+.login-form-wrap > .eyebrow,
+.demo-login p,
+.login-disclaimer,
+.login-evidence small,
+.evidence-flow,
+.connection,
+.human-note p,
+.help-link,
+.profile small,
+.nav-caption,
+.breadcrumb {
+  color: #61746f;
+}
+.focus-panel p,
+.focus-panel .eyebrow,
+.focus-bottom,
+.ribbon-tag,
+.ward-state {
+  color: #557664;
+}
+.pill.critical {
+  color: #a44348;
+}
+.pill.high,
+.pill.degraded {
+  color: #8e612f;
+}
+.pill.medium {
+  color: #866a27;
+}
+.pill.low,
+.pill.stable,
+.pill.online,
+.pill.resolved {
+  color: #3b7155;
+}
+.pill.investigating,
+.status-text.investigating {
+  color: #496f9e;
+}
+.recommendation small {
+  color: #856a39;
+}
+@media (max-width: 700px) {
+  .table-scroll.alert-desktop {
+    display: none;
+  }
+  .mobile-alerts {
+    display: block;
+  }
+  .mobile-alert-card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 17px;
+    border-top: 1px solid var(--line);
+  }
+  .mobile-alert-card > span {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .mobile-alert-card > span > small {
+    font-size: 10px;
+    color: #62776e;
+  }
+  .mobile-alert-card > b {
+    display: block;
+    font-size: 13px;
+    margin: 12px 0 7px;
+    line-height: 1.5;
+  }
+  .mobile-alert-card > small {
+    display: block;
+    font-size: 11px;
+    color: #647970;
+    margin-bottom: 14px;
+  }
+  .mobile-alert-card > span:last-child {
+    font-size: 11px;
+    color: var(--teal);
+  }
+  .sidebar nav a,
+  .btn,
+  .icon-btn,
+  .tabs button {
+    min-height: 42px;
+  }
+  .icon-btn {
+    min-width: 40px;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
